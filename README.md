@@ -1,5 +1,9 @@
 # struct-string
 
+See the corresponding [SO question](https://stackoverflow.com/questions/53534340/haskell-ffi-wrapping-a-c-struct-containing-a-separately-allocated-string-char)!
+
+
+
 Suppose you have a C-struct 
 
 ```c
