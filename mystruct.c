@@ -13,5 +13,6 @@ int main() {
     MyStruct m = { 1, buf } ;
     f(&m);
     printf("num=%d, str=%s\n", m.num, m.str);
+    printf("sizeof(MyStruct) = %d\n", sizeof(MyStruct));
 }
 */

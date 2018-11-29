@@ -13,23 +13,21 @@ data MyStruct = MyStruct {
 } deriving Show
 
 numOffset = 0
-strOffset =  numOffset + sizeOf (0 :: Word32)
+strOffset =  numOffset + 8 -- NOT: sizeOf (0 :: Word32)
 bufOffset =  strOffset + sizeOf (nullPtr :: CString)
 
 instance Storable MyStruct where
     sizeOf _ = bufOffset + 64
-    alignment _ = 4
+    alignment _ = 8
     peek p = MyStruct 
          <$> peek (castPtr p)
-         <*> peekCAString (trace ("strPtr="++show strPtr) strPtr)
-         where strPtr = castPtr (plusPtr p strOffset) :: CString
+         <*> peekCAString (castPtr $ plusPtr p bufOffset)
     poke p x = do
-        pokeByteOff (trace ("poke p "++show p) p) numOffset (num x)
-        pokeByteOff p strOffset bufPtr
+        pokeByteOff p numOffset (num x)
+        poke strPtr bufPtr
         withCStringLen (str x) $ \(p',l) -> copyBytes bufPtr p' (l+1)
-        s <- peekCAString bufPtr
-        print $ "s=" ++ show s
         where bufPtr = castPtr $ plusPtr p bufOffset :: CString
+              strPtr = castPtr $ plusPtr p strOffset :: Ptr CString
 
 foreign import ccall unsafe "./mystruct.h f"
     __f :: Ptr MyStruct -> IO ()
@@ -39,12 +37,7 @@ f ms = with ms $ \p -> __f p >> peek p
 
 main :: IO ()
 main = do
-    let myStruct = MyStruct 1 "0123456789"
-    with myStruct $ \p -> do
-        print p
-        m <- peek p
-        print m
---    print myStruct
---    newStruct <- f myStruct
---    print newStruct
-    return ()
+    let myStruct = MyStruct 1 "12345"
+    print myStruct
+    newStruct <- f myStruct
+    print newStruct

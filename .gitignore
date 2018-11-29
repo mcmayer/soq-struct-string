@@ -1,3 +1,6 @@
 .stack-work/
 struct-string.cabal
 *~
+*.chs.h
+*.chi
+MyStruct2.hs
