@@ -5,7 +5,7 @@
 void f(MyStruct* p) {
     char* buf = p->str;
     strncpy(buf, "Hello", 64);
-    p->num++;
+        p->num++;
 }
 
 /*
