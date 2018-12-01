@@ -19,21 +19,29 @@ bufOffset =  strOffset + sizeOf (nullPtr :: CString)
 instance Storable MyStruct where
     sizeOf _ = bufOffset + 64
     alignment _ = 8
-    peek p = MyStruct 
+    peek p = do
+        buf <- peekByteOff p strOffset :: IO CString
+        MyStruct 
          <$> peek (castPtr p)
-         <*> peekCAString (castPtr $ plusPtr p bufOffset)
+         <*> peekCAString buf
     poke p x = do
+        initMyStruct p
         pokeByteOff p numOffset (num x)
-        poke strPtr bufPtr
         withCStringLen (str x) $ \(p',l) -> copyBytes bufPtr p' (l+1)
         where bufPtr = castPtr $ plusPtr p bufOffset :: CString
-              strPtr = castPtr $ plusPtr p strOffset :: Ptr CString
 
 foreign import ccall unsafe "./mystruct.h f"
     __f :: Ptr MyStruct -> IO ()
+
+initMyStruct :: Ptr MyStruct -> IO ()
+initMyStruct p = do
+    let strPtr = castPtr $ plusPtr p strOffset :: Ptr CString
+        buf = castPtr $ plusPtr p bufOffset :: CString
+    poke buf 0
+    poke strPtr buf
       
 f :: MyStruct -> IO MyStruct
-f ms = with ms $ \p -> __f p >> peek p
+f ms = with ms $ \p -> initMyStruct p >>  __f p >> peek p
 
 main :: IO ()
 main = do

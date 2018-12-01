@@ -3,7 +3,8 @@
 #include <stdio.h>
 
 void f(MyStruct* p) {
-    strncpy(p->str, "Hello", 64);
+    char* buf = p->str;
+    strncpy(buf, "Hello", 64);
     p->num++;
 }
 
