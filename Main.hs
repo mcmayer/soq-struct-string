@@ -6,7 +6,16 @@ import           Foreign.Storable
 import           Foreign.C.String
 import           Data.Word
 import           Debug.Trace (trace)
-    
+import           Control.Monad (forM_)
+import           Data.Traversable
+
+{-
+    Note: In the real world use c2hs or c2hsc or binding-dsl or similar instead of hard-coding 
+    alignment and offsets!
+-}
+
+bufLen = 64 :: Int
+
 data MyStruct = MyStruct {
     num :: Word32,
     str :: String
@@ -17,7 +26,7 @@ strOffset =  numOffset + 8 -- NOT: sizeOf (0 :: Word32)
 bufOffset =  strOffset + sizeOf (nullPtr :: CString)
 
 instance Storable MyStruct where
-    sizeOf _ = bufOffset + 64
+    sizeOf _ = bufOffset + bufLen
     alignment _ = 8
     peek p = do
         buf <- peekByteOff p strOffset :: IO CString
@@ -40,12 +49,9 @@ initMyStruct p = do
     poke buf 0
     poke strPtr buf
       
-f :: MyStruct -> IO MyStruct
-f ms = with ms $ \p -> initMyStruct p >>  __f p >> peek p
+f :: IO MyStruct
+f = alloca $ \p -> initMyStruct p >> __f p >> peek p
 
 main :: IO ()
-main = do
-    let myStruct = MyStruct 1 "12345"
-    print myStruct
-    newStruct <- f myStruct
-    print newStruct
+main = 
+    print =<< last <$> sequence (replicate 1000 f)

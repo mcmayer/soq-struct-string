@@ -2,10 +2,12 @@
 #include <string.h>
 #include <stdio.h>
 
+uint32_t num = 0;
+
 void f(MyStruct* p) {
     char* buf = p->str;
-    strncpy(buf, "Hello", 64);
-        p->num++;
+    snprintf(buf, BUFLEN, "Hello visitor #%d", ++num);
+    p->num = num;
 }
 
 /*
